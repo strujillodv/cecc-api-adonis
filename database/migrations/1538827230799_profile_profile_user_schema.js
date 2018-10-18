@@ -15,14 +15,13 @@ class ProfileUserSchema extends Schema {
         .onDelete('CASCADE')
         .unique()
       table.string('slug', 600).notNullable().unique()
-      table.string('url_image_profile', 600).notNullable()
+      table.string('url_image_profile', 600)
       table
         .integer('profile_id')
         .unsigned()
         .references('id')
         .inTable('profiles')
         .onUpdate('CASCADE')
-        .unique()
       table
         .integer('image_id')
         .unsigned()
