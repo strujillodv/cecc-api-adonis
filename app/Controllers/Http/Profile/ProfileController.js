@@ -1,11 +1,12 @@
 'use strict'
 
-// Llamamos al modelo Profile e Images de perfil
-const Profile = use('App/Models/Profile/Profile')
+// Llamamos al modelo ProfileUser
+const Profile = use('App/Models/Profile/ProfileUser')
+const Info = use('App/Models/Profile/Profile')
 // const imageProfile = use('App/Models/Image')
 
 // LLamamos al Metodo Validador de AdonisJs
-const { validate } = use('Validator')
+const { validateAll } = use('Validator')
 
 const Helpers = use('Helpers')
 
@@ -29,13 +30,13 @@ class ProfileController {
     // Definimos reglas para validar los datos que le llegan a la api
     const rules = {
       first_name: 'required',
-      user_id: 'required|unique:profiles,user_id',
-      slug: 'required|unique:profiles,slug'
+      last_name: 'required'
     }
 
-    // Almacenamos el id y el username del usuario autenticado
+    // Almacenamos el id y el username del usuario autenticado en el objeto data
+    // para alimentar la tabla de profile_user
     const { id, user_name } = auth.user
-    // Almacenamos la información que llega por request
+    // Almacenamos la información que llega por request que se almacenara en la tabla profiles
     const data = request.only
     ([
       'first_name',
@@ -45,36 +46,7 @@ class ProfileController {
       'age'
     ])
 
-    function  slugConverter(str) {
-
-      str = str.replace(/^\s+|\s+$/g, ""); // trim
-      str = str.toLowerCase();
-
-      // eliminna accentos, comvierte ñ a n, entre otros
-      var from = "åàáãäâèéëêìíïîòóöôùúüûñç·/_,:;"
-      var to = "aaaaaaeeeeiiiioooouuuunc------"
-
-      for (var i = 0, l = from.length; i < l; i++) {
-        str = str.replace(new RegExp(from.charAt(i), "g"), to.charAt(i));
-      }
-
-      str = str
-        .replace(/[^a-z0-9 -]/g, "") // eliminina los caracteres invalidos
-        .replace(/\s+/g, "-") // colapsa los espacios y los remplaza por -
-        .replace(/-+/g, "-") // colapsa y unifica los - diplicados
-        .replace(/^-+/, "") // asegura que los guiones no aparecen al comienzo de la cadena
-        .replace(/-+$/, ""); // asegura que los guiones no aparecen al final de la cadena
-
-      return str // retorna la cadena limpia
-    }
-
-    // Agregamos el id del usuario autenticado
-    data.user_id = id
-
-    // Le asignamos un slug unico con el primer nombre y el username
-    data.slug = slugConverter(data.first_name+' '+user_name)
-
-    const validation = await validate(data, rules)
+    const validation = await validateAll(data, rules)
 
     // Comprobamos si falla la validación
     if (validation.fails()) {
@@ -84,8 +56,18 @@ class ProfileController {
 
     // Manejo de excepciones
     try {
+
+      const infoProfile= await Info.create(data)
       // Almacenamos en la Base de Datos
-      const profile = await Profile.create(data)
+      // Agregamos el id del usuario autenticado
+       // Le asignamos un slug unico con el username
+      const profile = await Profile.create({user_id: id, slug: user_name, profile_id: infoProfile.id})
+      // Almacenamos información del perfil
+      // await profile.profile.create(data)
+
+      await profile.load('information')
+
+      await profile.load('user')
 
       // Enviamos los datos almacenados
       return response.status(201).json({
@@ -183,40 +165,7 @@ class ProfileController {
    * POST profiles/:slug/images
    */
   async storeImage ({params, request, response }) {
-    // try{
 
-    //   const Profile = await Profile.findOrFail(params.slug)
-
-    //   const images = request.file('image', {
-    //     types: ['image'],
-    //     size: '5mb'
-    //   })
-
-    //   await images.moveAll(Helpers.tmpPath('uploads/profile'), file => ({
-    //     name: `${Date.now()}-${file.clientName}`
-    //   }))
-
-    //   if (!images.movedAll()) {
-    //     return images.errors()
-    //   }
-
-    //   await Promise.all(
-    //     images
-    //       .movedList()
-    //       .map(image => property.images().create({ path: image.fileName }))
-    //   )
-
-    //   return response.status(200).json({
-    //     status: 'sucess',
-    //     data: 'Imagen cargada correctamente'
-    //   })
-    // }
-    // catch (error){
-    //   return response.status(400).json({
-    //     status: 'error',
-    //     data: error
-    //   })
-    // }
     const profile = await Profile.findByOrFail('slug', params.slug)
 
     const images = request.file('image', {

@@ -36,11 +36,15 @@ class User extends Model {
    * Oculta el  password cuando el usuario es consultado.
    */
   static get hidden () {
-    return ['password']
+    return ['password', 'created_at', 'updated_at']
   }
 
+
+  /**
+   *Relacionamos la tabla users 1 - 1 con la tabla profile_users
+   */
   profile () {
-    return this.hasOne('App/Models/Profile/Profile')
+    return this.hasOne('App/Models/Profile/ProfileUser')
   }
 }
 
