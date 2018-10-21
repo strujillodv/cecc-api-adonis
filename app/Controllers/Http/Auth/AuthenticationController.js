@@ -4,23 +4,26 @@
 const User = use('App/Models/User')
 
 // LLamamos al Metodo Validador de AdonisJs
-const { validate } = use('Validator')
+const { validateAll } = use('Validator')
 
 // Clase para el manejo de la autenticación y creación de usuarios
 class AuthenticationController {
 
-  // Metodo para registrar usuarios
+  /*
+   * Metodo para registrar usuarios
+   */
   async register ({ request, auth, response }) {
 
     // Definimos reglas para validar los datos que le llegan a la api
     const rules = {
+      user_name: 'alpha_numeric|required|unique:users,user_name|min:4|max:20',
       email: 'required|email|unique:users,email',
-      password: 'required'
+      password: 'required|confirmed'
     }
 
     // En la constante validation comparamos los datos que llegan en la request con las reglas definidas
     // para evitar errores en la informacion que se almacenara en la bases de datos
-    const validation = await validate(request.all(), rules)
+    const validation = await validateAll(request.all(), rules)
 
     // Comprobamos si falla la validación
     if (validation.fails()) {
@@ -30,11 +33,8 @@ class AuthenticationController {
 
     // Si la validación no contiene errores crea el nuevo usuario
     // Almacenamos la información que llega por request en la constante data
-    const data = request.only(['email', 'password'])
+    const data = request.only(['user_name','email', 'password'])
 
-    const username = data.email.split('@')
-
-    data.user_name = username[0]
     // Manejo de exepciones
     try {
 
@@ -57,7 +57,9 @@ class AuthenticationController {
     }
   }
 
-  // Metodo para autenticarse en la Api-Rest
+  /*
+   * Metodo para autenticarse en la Api-Rest
+   */
   async login ({ request, auth, response }) {
 
     // Almacenamos la información que llega por request
@@ -89,11 +91,12 @@ class AuthenticationController {
       data: auth.user
     })
   }
+
   async showuser ({ response}) {
 
     const user = await User.find(1)
 
-    await user.load('profile')
+    await user.loadMany(['profile.information','profile.image'])
 
     return response.json({
       status: 'success',
