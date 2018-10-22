@@ -2,7 +2,7 @@
   "name": "adonis-api-app",
   "version":  "1.1.50a",
   "adonis-version": "4.1.0",
-  "description": "Adonisjs boilerplate for API server with pre-configured JWT",
+  "description": "Api-rest full de la aplicacoin cecc",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
@@ -12,7 +12,10 @@
     "adonisjs",
     "adonis-app"
   ],
-  "author": "",
+  "engines": {
+    "node": "8.11.3"
+  },
+  "author": "Sergio Antonio Trujillo del Valle",
   "license": "UNLICENSED",
   "private": true,
   "dependencies": {
