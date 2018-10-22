@@ -27,7 +27,7 @@ class AuthenticationController {
 
     // Comprobamos si falla la validación
     if (validation.fails()) {
-      // Muestra un error 400 y el error que ocurrio
+      // Muestra un error 400 y los errores que ocurrieron
       return response.status(400).json(validation.messages())
     }
 
@@ -49,7 +49,7 @@ class AuthenticationController {
       })
 
     } catch (error) {
-      // Responde a la aplicaion si se produce un erro al crear un usuario
+      // Responde a la aplicaion si se produce un error al crear un usuario
       return response.status(400).json({
         status: 'error',
         message: 'Ha ocurrido un error al intentar crear el usuario, ', error
@@ -84,19 +84,13 @@ class AuthenticationController {
     }
   }
 
-  async me ({ auth, response}) {
+  async show ({ auth, response}) {
 
-    return response.json({
-      status: 'success',
-      data: auth.user
-    })
-  }
+    const { id } = auth.user
 
-  async showuser ({ response}) {
+    const user = await User.find(id)
 
-    const user = await User.find(1)
-
-    await user.loadMany(['profile.information','profile.image'])
+    await user.load('profile')
 
     return response.json({
       status: 'success',

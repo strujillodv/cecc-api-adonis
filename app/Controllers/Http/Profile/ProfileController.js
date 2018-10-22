@@ -1,7 +1,7 @@
 'use strict'
 
 // Llamamos al modelo ProfileUser
-const Profile = use('App/Models/Profile/ProfileUser')
+const Profile = use('App/Models/Profile')
 const Info = use('App/Models/Profile/Profile')
 // const imageProfile = use('App/Models/Image')
 
@@ -29,8 +29,8 @@ class ProfileController {
 
     // Definimos reglas para validar los datos que le llegan a la api
     const rules = {
-      first_name: 'required',
-      last_name: 'required'
+      first_name: 'required|alpha',
+      last_name: 'required|alpha'
     }
 
     // Almacenamos el id y el username del usuario autenticado en el objeto data
