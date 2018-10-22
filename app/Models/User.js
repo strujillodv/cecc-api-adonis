@@ -4,12 +4,13 @@ const Model = use('Model')
 const Hash = use('Hash')
 
 class User extends Model {
+
   static boot () {
     super.boot()
 
     /**
-     * A hook to hash the user password before saving
-     * it to the database.
+     * hook que se ejecuta luego de la creación del usuario
+     * con el cual se encripta el password en la base de datos
      */
     this.addHook('beforeSave', async userInstance => {
       if (userInstance.dirty.password) {
@@ -19,32 +20,36 @@ class User extends Model {
   }
 
   /**
-   * A relationship on tokens is required for auth to
-   * work. Since features like `refreshTokens` or
-   * `rememberToken` will be saved inside the
-   * tokens table.
+   * Relacion requerida para almacenar los
+   * tokens del usuario
    *
    * @method tokens
    *
    * @return {Object}
    */
+
   tokens () {
     return this.hasMany('App/Models/Token')
   }
 
   /**
-   * Oculta el  password cuando el usuario es consultado.
+   * Relacion 1 - 1 con la tabla profiles
+   *
+   * @method profile
+   *
+   * @return {Object}
+   */
+
+  profile () {
+    return this.hasOne('App/Models/Api/V-1/Profile')
+  }
+
+  /**
+   * Metodo para ocultar los campos que no necesitamos mostrar
+   * en la consulta.
    */
   static get hidden () {
     return ['password', 'created_at', 'updated_at']
-  }
-
-
-  /**
-   *Relacionamos la tabla users 1 - 1 con la tabla profile_users
-   */
-  profile () {
-    return this.hasOne('App/Models/Profile/ProfileUser')
   }
 }
 
