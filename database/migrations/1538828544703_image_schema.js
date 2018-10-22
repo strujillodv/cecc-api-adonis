@@ -10,7 +10,6 @@ class ImageSchema extends Schema {
       table.timestamps()
     })
   }
-
   down () {
     this.drop('images')
   }
