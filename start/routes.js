@@ -11,8 +11,10 @@ Route.group(() => {
   Route.get('show', 'Auth/AuthenticationController.show').middleware(['auth'])
   // rutas para la gestion de perfiles de usuario
   Route.resource('profile', 'Api/V-1/ProfileController')
-    .apiOnly().except(['index', 'create','edit'])
+    .apiOnly().only(['update','store'])
     .middleware('auth')
+    // ruta para la consulta de perfil por el valor del campo slug en la tabla profiles
+  Route.get('profile/:slug', 'Api/V-1/ProfileController.show').middleware('auth')
   // ruta para cargar imagenes en el perfil de usuario
   Route.post('profiles/:slug/images', 'Api/V-1/ProfileController.storeImage').middleware('auth')
 
