@@ -20,3 +20,6 @@ Route.group(() => {
 
 Route.get('images/:path', 'ImageController.show')
 
+Route.get('/', ({ response }) => {
+  return response.status(400).json('Informacion de la api en: https://github.com/strujillodv/cecc-api-adonis')
+})
