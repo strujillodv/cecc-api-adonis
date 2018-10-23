@@ -68,36 +68,37 @@ class ProfileController {
       })
 
     } catch (error){
+      if (Object.keys(error).length === 0) error =`A ocurrido un error al intentar guardar el perfil de ${user_name}`
       // Responde a la aplicaion si se produce un error al guardar la información
       return response.status(400).json({
         status: 'error',
-        message: 'A ocurrido un error al intentar guardar el perfil de usuario', error
+        message: error
       })
     }
   }
 
   /**
-   * Muestra el perfil del usuario selecionado por id.
-   * GET profile/:id
+   * Muestra el perfil del usuario selecionado por el valor del campo slug
+   * de la tabla profiles.
+   *
+   * GET profile/:slug
+   * @return {profile}
    */
-  async show ({ params, request, response, view }) {
-
-    const profile = await Profile.findByOrFail('slug', params.id)
-
-    await profile.load('user')
-
-    await profile.load('images')
-
+  async show ({ params, response }) {
     try {
-      // Enviamos los datos almacenados
+      const profile = await Profile.findByOrFail('slug', params.slug)
+      await profile.load('user')
+      await profile.load('images')
       return response.status(201).json({
         status: 'success',
         data: profile
       })
-    } catch (e) {
+    }
+    catch (error) {
+      if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar el perfil de ${params.slug}`
       return response.status(400).json({
         status: 'error',
-        message: 'A ocurrido un error al intentar guardar el perfil de usuario', error
+        message: error
       })
     }
   }
