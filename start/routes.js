@@ -1,7 +1,6 @@
 'use strict'
 
 const Route = use('Route')
-const nameApi = 'api/v1'
 
 Route.group(() => {
   // ruta para autenticar los usuarios
@@ -17,7 +16,7 @@ Route.group(() => {
   // ruta para cargar imagenes en el perfil de usuario
   Route.post('profiles/:slug/images', 'Api/V-1/ProfileController.storeImage').middleware('auth')
 
-}).prefix(nameApi)
+}).prefix('api/v1')
 
 Route.get('images/:path', 'ImageController.show')
 
