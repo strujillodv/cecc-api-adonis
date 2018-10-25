@@ -1,6 +1,6 @@
 {
   "name": "adonis-api-app",
-  "version": "1.1.50a",
+  "version": "1.6.22a",
   "adonis-version": "4.1.0",
   "description": "Api-rest full de la aplicacoin cecc",
   "main": "index.js",
@@ -16,7 +16,7 @@
     "node": "8.11.3"
   },
   "author": "Sergio Antonio Trujillo del Valle",
-  "license": "UNLICENSED",
+  "license": "MIT",
   "private": true,
   "dependencies": {
     "@adonisjs/ace": "^5.0.2",
