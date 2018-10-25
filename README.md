@@ -1,27 +1,33 @@
-# Adonis API application
+# API-REST de la aplicacion de Cultura Etica y Convivencia Ciudadana CECC
 
-This is the boilerplate for creating an API server in AdonisJs, it comes pre-configured with.
+Esta construida con el Framework Node Adonisjs, configurado con:
 
 1. Bodyparser
 2. Authentication
 3. CORS
 4. Lucid ORM
 5. Migrations and seeds
+6. Validator
 
-## Setup
+## Documentación
 
-Use the adonis command to install the blueprint
+[https://documenter.getpostman.com/view/233252/RWgwRvv2](https://documenter.getpostman.com/view/233252/RWgwRvv2)
+
+## Instalación
+
+clone el repositorio then y ejecute el comando
 
 ```bash
-adonis new yardstick --api-only
+run npm i
 ```
 
-or manually clone the repo and then run `npm install`.
+### Configuración
 
+Cree en el directorio el archivo .env
 
-### Migrations
+### Ejecute las migraciones
 
-Run the following command to run startup migrations.
+ejecute el siguiente comando.
 
 ```js
 adonis migration:run
