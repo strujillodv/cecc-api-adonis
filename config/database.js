@@ -3,10 +3,13 @@
 const Env = use('Env')
 const Helpers = use('Helpers')
 
+// libreria para obtener los datos de la url que indica la configuracion de la
+// Base de Datos
 const Url = require('url-parse')
 const DATABASE_URL = new Url(Env.get('DATABASE_URL'))
 
 module.exports = {
+
   /*
   |--------------------------------------------------------------------------
   | Default Connection
