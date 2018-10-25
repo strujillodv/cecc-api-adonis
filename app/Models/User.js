@@ -45,9 +45,22 @@ class User extends Model {
   }
 
   /**
+   * Relacion 1 - 1 con la tabla activitys
+   *
+   * @method activitys
+   *
+   * @return {Object}
+   */
+
+  activitys () {
+    return this.hasMany('App/Models/Api/V-1/Activity')
+  }
+
+  /**
    * Metodo para ocultar los campos que no necesitamos mostrar
    * en la consulta.
    */
+
   static get hidden () {
     return ['password', 'created_at', 'updated_at']
   }

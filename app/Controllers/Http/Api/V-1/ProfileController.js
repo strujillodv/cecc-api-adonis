@@ -8,15 +8,10 @@ const Profile = use('App/Models/Api/V-1/Profile')
 
 const { validate } = use('Validator')
 
-class ProfileController {
-  /**
-   * Muestra una lista de todos los perfiles.
-   * GET profile
-   */
-  async index ({ request, response, view }) {
-  }
+const Helpers = use('Helpers')
 
-  /**
+class ProfileController {
+   /**
    * Crea o genera un nuevo perfil de usuario.
    * POST profile
    */
@@ -86,8 +81,11 @@ class ProfileController {
    */
   async show ({ params, response }) {
     try {
+      // Buscamos en la bases de datos si hay un registro que concida con el slug
       const profile = await Profile.findByOrFail('slug', params.slug)
+      // Carga la inforamción del usuario
       await profile.load('user')
+      // Carga las imagenes del usuario
       await profile.load('images')
       return response.status(201).json({
         status: 'success',
@@ -95,6 +93,7 @@ class ProfileController {
       })
     }
     catch (error) {
+      // Si no hay un registro que coincida muestra error
       if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar el perfil de ${params.slug}`
       return response.status(400).json({
         status: 'error',
@@ -107,7 +106,48 @@ class ProfileController {
    * Actualiza la información del perfil de usuario.
    * PUT or PATCH profile/:id
    */
-  async update ({ params, request, response }) {
+  async update ({ auth, params, request, response }) {
+    //Obtenemos el username del usuario autenticado y se almacena en una nueva const user_name
+    const { user_name } = auth.user
+    // Validamos que el usuario autenticado este intentando modificar su perfil
+    if (user_name === params.slug) {
+      try {
+        // Busca el perfi del usuario
+        const profile = await Profile.findByOrFail('slug', params.slug)
+        // almacena la nueva información en la const data
+        const data = request.only
+        ([
+          'first_name',
+          'last_name',
+          'treatment',
+          'phone',
+          'age'
+        ])
+        // método que solo modifica los atributos especificados.
+        profile.merge(data)
+        // metodo para persistir los cambios en la base de datos
+        await profile.save()
+        // retorna la respuesta exitosa
+        return response.status(201).json({
+          status: 'success',
+          data: profile
+        })
+      } catch (error) {
+        // Si no se pudo actualizar muestra un error
+        if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar el perfil de ${params.slug}`
+        return response.status(400).json({
+          status: 'error',
+          message: error
+        })
+      }
+
+    } else {
+      // Si no es el perfil del usuario autenticado muestra un error
+      return response.status(400).json({
+        status: 'error',
+        message: 'No tiene permiso para hacer modificiones en este perfil'
+      })
+    }
   }
 
   /**
@@ -118,37 +158,48 @@ class ProfileController {
   }
 
   /**
-   * Elimina un usuario selecionado por id.
-   * DELETE profile/:id
+   * Se encarga de subir imagenes al perfil de usuario.
+   * El atributo en el formulario se debe llamr
+   * image[]
+   * para cargar varias imagenes
+   * POST profile/:slug/images
    */
-  async storeImage ({params, request, response }) {
+  async profileImages ({params, request, response }) {
 
+    // Busca el perfil de usuario por slug
     const profile = await Profile.findByOrFail('slug', params.slug)
 
+    // almacena las imagenes que llegan por request
     const images = request.file('image', {
       types: ['image'],
-      size: '5mb'
+      size: '3mb'
     })
 
-    await images.moveAll(Helpers.tmpPath('uploads/profile'), file => ({
+    // Mueve los archivos guardados a la carpeta uploads/profiles/
+    await images.moveAll(Helpers.tmpPath('uploads/profiles/'), file => ({
+      // renombra los archivos
       name: `${Date.now()}-${file.clientName}`
     }))
 
+    // Identifica si hubo algun error al mover las imagenes, si lo hubo muestra un error
     if (!images.movedAll()) {
       return images.errors()
     }
 
+    // Almacena el path de las imagenes en la tabla de imagenes relacionada con los perfiles
     await Promise.all(
       images
         .movedList()
         .map(image => profile.images().create({ path: image.fileName }))
     )
 
+    // carga lazy de las imagenes de usuario
     await profile.load('images')
 
+    // muestra el perfil de usuario con las imagenes almacenadas
     return response.status(200).json({
       status: 'error',
-      data: params, profile, images
+      data: profile
     })
   }
 }
