@@ -107,7 +107,7 @@ class ActivityController {
     try {
       const activity = await Activity.findByOrFail('slug', params.slug)
       await activity.load('user.profile')
-      // await activity.load('images')
+      await activity.load('organizers')
       return response.status(201).json({
         status: 'success',
         data: activity
@@ -188,7 +188,7 @@ class ActivityController {
    */
   async activityImages ({params, request, response }) {
 
-    const profile = await Profile.findByOrFail('slug', params.slug)
+    const activity = await Activity.findByOrFail('slug', params.slug)
 
     const images = request.file('image', {
       types: ['image'],
@@ -207,14 +207,14 @@ class ActivityController {
     await Promise.all(
       images
         .movedList()
-        .map(image => profile.images().create({ path: image.fileName }))
+        .map(image => activity.images().create({ path: image.fileName }))
     )
 
-    await profile.load('images')
+    await activity.load('images')
 
     return response.status(200).json({
       status: 'error',
-      data: profile
+      data: activity
     })
   }
 }

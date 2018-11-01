@@ -1,14 +1,15 @@
 'use strict'
 
 /*
- * Modelos y recursos a implementar
+ * Modelos a implementar
  */
-
 const Profile = use('App/Models/Api/V-1/Profile')
 
+/*
+ * Recursos utilizados
+ */
 const { validate } = use('Validator')
-
-const Helpers = use('Helpers')
+const Cloudinary = use('App/Services/CloudinaryService')
 
 class ProfileController {
    /**
@@ -86,7 +87,7 @@ class ProfileController {
       // Carga la inforamción del usuario
       await profile.load('user')
       // Carga las imagenes del usuario
-      await profile.load('images')
+      await profile.load('image')
       return response.status(201).json({
         status: 'success',
         data: profile
@@ -104,7 +105,7 @@ class ProfileController {
 
   /**
    * Actualiza la información del perfil de usuario.
-   * PUT or PATCH profile/:id
+   * PUT profile/:id
    */
   async update ({ auth, params, request, response }) {
     //Obtenemos el username del usuario autenticado y se almacena en una nueva const user_name
@@ -158,49 +159,104 @@ class ProfileController {
   }
 
   /**
-   * Se encarga de subir imagenes al perfil de usuario.
-   * El atributo en el formulario se debe llamr
-   * image[]
-   * para cargar varias imagenes
-   * POST profile/:slug/images
+   * Se encarga de subir una imagen de perfil de usuario.
+   * El atributo en el formulario se debe llamar image
+   * para cargar la imagen
+   *
+   * POST profile/:slug/image
    */
-  async profileImages ({params, request, response }) {
-
-    // Busca el perfil de usuario por slug
-    const profile = await Profile.findByOrFail('slug', params.slug)
+  async profileImageUpload ({params, request, response }) {
 
     // almacena las imagenes que llegan por request
-    const images = request.file('image', {
-      types: ['image'],
-      size: '3mb'
-    })
+    try {
 
-    // Mueve los archivos guardados a la carpeta uploads/profiles/
-    await images.moveAll(Helpers.tmpPath('uploads/profiles/'), file => ({
-      // renombra los archivos
-      name: `${Date.now()}-${file.clientName}`
-    }))
+      // Busca el perfil de usuario por slug
+      const profile = await Profile.findByOrFail('slug', params.slug)
 
-    // Identifica si hubo algun error al mover las imagenes, si lo hubo muestra un error
-    if (!images.movedAll()) {
-      return images.errors()
+      // almacenamos la imagen cargada en la const fie
+      const file = request.file('image')
+
+      // cargamos la imagen de usuario con el servicio de cloudinary
+      const cloudinaryMeta = await Cloudinary.v2.uploader.upload(
+        file.tmpPath,
+        {
+          // le asignamos como public_id el valor almacenado en el slug del perfil
+          public_id: profile.slug,
+          // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada profiles
+          // en caso de no existir la creara
+          folder: 'profiles',
+          width: 500,
+          async: true
+        }
+      )
+      // almacenamos la informacion de la imagen almacenada en la tabla image_profiles
+      const img = await profile.image().create({
+        public_id: cloudinaryMeta.public_id,
+        version: cloudinaryMeta.version,
+        path: cloudinaryMeta.secure_url
+      })
+      // devuelve los datos de la imagen de perfil almacenada
+      return response.status(200).json({
+        status: 'success',
+        data: img
+      })
     }
+    catch (error) {
+      // Muestra un mensaje de error si no se guarda la imagen
+      return response.status(400).json({
+        status: 'error',
+        error: error,
+        msg: 'eror inesperado al guardar imagen'
+      })
+    }
+  }
 
-    // Almacena el path de las imagenes en la tabla de imagenes relacionada con los perfiles
-    await Promise.all(
-      images
-        .movedList()
-        .map(image => profile.images().create({ path: image.fileName }))
-    )
+  /**
+   * Se encarga de actializar la imagen de perfil de usuario.
+   * El atributo en el formulario se debe llamar image
+   *
+   * para cargar la imagen
+   * PUT profile/:slug/image
+   */
+  async profileImageUpdate ({params, request, response }) {
+    try {
+      // Busca el perfil de usuario por slug
+      const profile = await Profile.findByOrFail('slug', params.slug)
+      // elimina la anterior imagen
+      await Cloudinary.v2.uploader.destroy(`profiles/${params.slug}`)
 
-    // carga lazy de las imagenes de usuario
-    await profile.load('images')
-
-    // muestra el perfil de usuario con las imagenes almacenadas
-    return response.status(200).json({
-      status: 'error',
-      data: profile
-    })
+      // almacena la imagen que llegan por request en la const file
+      const file = request.file('image')
+      // cargamos la imagen de usuario con el servicio de cloudinary
+      const cloudinaryMeta = await Cloudinary.v2.uploader.upload(
+        file.tmpPath,
+        {
+          public_id: profile.slug,
+          folder: 'profiles',
+          width: 500,
+          async: true
+        }
+      )
+      // actualizamos la informacion de la imagen almacenada en la tabla image_profiles
+      const img = await profile.image().update({
+        public_id: cloudinaryMeta.public_id,
+        version: cloudinaryMeta.version,
+        path: cloudinaryMeta.secure_url
+      })
+      // muestra la nueva imagen de perfil almacenada
+      return response.status(200).json({
+        status: 'success',
+        data: img
+      })
+    }
+    catch (error) {
+      // muestra un error si algo inseperado ocurre
+      return response.status(400).json({
+        status: 'error',
+        error: error,
+        msg: 'eror inesperado al actualizar la imagen'
+      })
+    }
   }
 }
 

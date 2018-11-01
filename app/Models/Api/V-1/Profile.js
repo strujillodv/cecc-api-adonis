@@ -4,7 +4,8 @@ const Model = use('Model')
 
 class Profile extends Model {
   /**
-   * Relaciona 1 - 1 la tabla Proflies con Users
+   * indica que cada perfil esta relacionado con solo un usuario
+   * Relaciona 1 - 1 la tabla Users
    *
    * @method user
    *
@@ -13,15 +14,17 @@ class Profile extends Model {
   user () {
     return this.belongsTo('App/Models/User')
   }
+
   /**
-   * Relaciona 1 - n, la tabla Proflies con Images
+   * indica que cada perfil puede tenr varias imagenes
+   * Relación 1 - n con la tabla image_profiles
    *
    * @method images
    *
    * @return {Object}
    */
-  images () {
-    return this.hasMany('App/Models/Images/ImageProfile')
+  image () {
+    return this.hasOne('App/Models/Images/ImageProfile')
   }
 }
 

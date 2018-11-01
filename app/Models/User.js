@@ -33,6 +33,7 @@ class User extends Model {
   }
 
   /**
+   * Indica que a cada usuario solo le pertenece un perfil
    * Relacion 1 - 1 con la tabla profiles
    *
    * @method profile
@@ -45,14 +46,15 @@ class User extends Model {
   }
 
   /**
-   * Relacion 1 - 1 con la tabla activitys
+   * Indica que cada usuario puede tener varias actividades creadas
+   * Relacion 1 - n con la tabla activities
    *
-   * @method activitys
+   * @method activities
    *
    * @return {Object}
    */
 
-  activitys () {
+  activities () {
     return this.hasMany('App/Models/Api/V-1/Activity')
   }
 
