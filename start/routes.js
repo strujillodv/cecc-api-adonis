@@ -7,13 +7,6 @@ Route.get('/', ({ response }) => {
   response.redirect(Env.get('API_REST_NAME'))
 })
 
-/*
- * Rutas para la viusalizar las imagenes
- * Verbos GET
- */
-
-Route.get('images/profiles/:path', 'ImageController.profiles')
-
 Route.group(() => {
 
   // Ruta de bienvenida en la api rest
@@ -47,8 +40,10 @@ Route.group(() => {
   Route.get('profile/:slug', 'Api/V-1/ProfileController.show').middleware('auth')
   // ruta para la consulta de perfil por el valor del campo slug en la tabla profiles
   Route.put('profile/:slug', 'Api/V-1/ProfileController.update').middleware('auth')
-  // ruta para cargar imagenes en el perfil de usuario
-  Route.post('profile/:slug/images', 'Api/V-1/ProfileController.profileImages').middleware('auth')
+  // ruta para cargar imagen de perfil de usuario
+  Route.post('profile/:slug/image', 'Api/V-1/ProfileController.profileImageUpload').middleware('auth')
+  // ruta para actualizar la imagen de perfil
+  Route.put('profile/:slug/image', 'Api/V-1/ProfileController.profileImageUpdate').middleware('auth')
 
 
   /*
@@ -66,5 +61,7 @@ Route.group(() => {
   Route.put('activity/:slug', 'Api/V-1/ActivityController.update').middleware('auth')
   // ruta para cargar imagenes en el perfil de usuario
   Route.post('activity/:slug/images', 'Api/V-1/ActivityController.activityImages').middleware('auth')
+  // ruta para cargar organizadores
+  Route.post('activity/:slug/organizers', 'Api/V-1/OrganizerController.store').middleware('auth')
 
 }).prefix(Env.get('API_REST_NAME'))
