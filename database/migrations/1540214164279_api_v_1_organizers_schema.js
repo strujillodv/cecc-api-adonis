@@ -14,6 +14,7 @@ class OrganizersSchema extends Schema {
         .onUpdate('CASCADE')
         .onDelete('CASCADE')
       table.string('name', 600).notNullable()
+      table.string('short_description', 300)
       table.string('link_web', 600).notNullable()
       table.string('link_faceboock', 600).notNullable()
       table.string('email', 600).notNullable()

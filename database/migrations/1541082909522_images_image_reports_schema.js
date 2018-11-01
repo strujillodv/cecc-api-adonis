@@ -2,15 +2,15 @@
 
 const Schema = use('Schema')
 
-class ImageProfileSchema extends Schema {
+class ImageReportsSchema extends Schema {
   up () {
-    this.create('image_profiles', (table) => {
+    this.create('image_reports', (table) => {
       table.increments()
       table
-        .integer('profile_id')
+        .integer('report_id')
         .unsigned()
         .references('id')
-        .inTable('profiles')
+        .inTable('reports')
         .onUpdate('CASCADE')
         .onDelete('CASCADE')
       table.string('public_id', 300).notNullable()
@@ -21,8 +21,8 @@ class ImageProfileSchema extends Schema {
   }
 
   down () {
-    this.drop('image_profiles')
+    this.drop('image_reports')
   }
 }
 
-module.exports = ImageProfileSchema
+module.exports = ImageReportsSchema

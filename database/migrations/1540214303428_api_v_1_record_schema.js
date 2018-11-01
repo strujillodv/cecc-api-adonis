@@ -2,17 +2,18 @@
 
 const Schema = use('Schema')
 
-class HistorySchema extends Schema {
+class RecordSchema extends Schema {
   up () {
-    this.create('history', (table) => {
+    this.create('record', (table) => {
       table.increments()
+      table.string('title', 300).notNullable()
+      table.string('description', 1000).notNullable()
       table
         .integer('user_id')
         .unsigned()
         .references('id')
         .inTable('users')
         .onUpdate('CASCADE')
-        .onDelete('CASCADE')
       table
         .integer('report_id')
         .unsigned()
@@ -25,8 +26,8 @@ class HistorySchema extends Schema {
   }
 
   down () {
-    this.drop('history')
+    this.drop('record')
   }
 }
 
-module.exports = HistorySchema
+module.exports = RecordSchema
