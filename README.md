@@ -15,10 +15,10 @@ Esta construida con el Framework Node Adonisjs, configurado con:
 
 ## Instalación
 
-clone el repositorio then y ejecute el comando
+clone el repositorio y ejecute el comando
 
 ```bash
-run npm i
+  npm i
 ```
 
 ### Configuración
@@ -30,5 +30,5 @@ Cree en el directorio el archivo .env
 ejecute el siguiente comando.
 
 ```js
-adonis migration:run
+  adonis migration:run
 ```
