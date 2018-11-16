@@ -13,7 +13,6 @@ class ImageActivitiesSchema extends Schema {
         .inTable('activities')
         .onUpdate('CASCADE')
         .onDelete('CASCADE')
-        .unique()
       table.string('public_id', 300).notNullable()
       table.string('version', 300).notNullable()
       table.string('path', 600).notNullable()

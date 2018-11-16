@@ -13,7 +13,6 @@ class ImageOrganizersSchema extends Schema {
         .inTable('organizers')
         .onUpdate('CASCADE')
         .onDelete('CASCADE')
-        .unique()
       table.string('public_id', 300).notNullable()
       table.string('version', 300).notNullable()
       table.string('path', 600).notNullable()
