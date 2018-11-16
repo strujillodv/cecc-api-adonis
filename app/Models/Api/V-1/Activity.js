@@ -4,7 +4,8 @@ const Model = use('Model')
 
 class Activity extends Model {
   /**
-   * Indica que a cada usuario le pueden pertenecer muchas actividades
+   * Indica que a cada usuario puede crear muchas actividades
+   * Solo lo pueden realizar administradores
    * Relación n - 1 con la tabla users
    *
    * @method user
@@ -17,7 +18,7 @@ class Activity extends Model {
 
   /**
    * Indica que cada actividad puede tener muchos organizadores
-   * Relaciona 1 - n con la tabla Images
+   * Relaciona 1 - n con la tabla organizers
    *
    * @method organizers
    *

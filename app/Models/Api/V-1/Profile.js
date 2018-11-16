@@ -16,10 +16,10 @@ class Profile extends Model {
   }
 
   /**
-   * indica que cada perfil puede tenr varias imagenes
-   * Relación 1 - n con la tabla image_profiles
+   * indica que cada perfil puede tener una imagen
+   * Relación 1 - 1 con la tabla image_profiles
    *
-   * @method images
+   * @method image
    *
    * @return {Object}
    */
