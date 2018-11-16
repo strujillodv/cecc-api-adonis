@@ -8,7 +8,7 @@ const Activity = use('App/Models/Api/V-1/Activity')
 
 const { validate, sanitizor } = use('Validator')
 
-const Helpers = use('Helpers')
+const Cloudinary = use('App/Services/CloudinaryService')
 
 class ActivityController {
 
@@ -29,9 +29,9 @@ class ActivityController {
    */
   async store ({ auth, request, response }) {
 
-    //Obtenemos el id y el username del usuario autenticado y se alacena en una nueva const
+    //Obtenemos el id y el rol del usuario autenticado y se almacena en una nueva const
     const { id, rol } = auth.user
-
+    // validamos que e rol corresponda a administrador
     if (rol === Env.get('ADMIN_TYPE')) {
       // Definimos reglas para validar los datos que le llegan a la api
       const rules = {
@@ -59,8 +59,10 @@ class ActivityController {
         'neighborhood',
         'location'
       ])
+
       data.user_id = id
-      data.slug = sanitizor.slug(`${data.title} ${data.address} ${data.location}`)
+
+      data.slug = sanitizor.slug(`${data.title} ${data.address} ${date_event}`)
 
       // Validamos la información obtenida por el request, con las reglas ya definidas
       const validation = await validate(data, rules)
@@ -108,6 +110,7 @@ class ActivityController {
       const activity = await Activity.findByOrFail('slug', params.slug)
       await activity.load('user.profile')
       await activity.load('organizers')
+      await activity.load('images')
       return response.status(201).json({
         status: 'success',
         data: activity
@@ -180,42 +183,92 @@ class ActivityController {
    * DELETE activities/:id
    */
   async destroy ({ params, request, response }) {
+
   }
 
   /**
-   * Se encarga de subir imagenes al perfil de usuario.
-   * POST  activity/:slug/images
+   * Se encarga de subir las imagenes de actividades.
+   * El atributo en el formulario se debe llamar images[]
+   * para cargar la imagen
+   *
+   * POST activity/:slug/images
    */
-  async activityImages ({params, request, response }) {
+  async imageUpload ({params, request, response }) {
 
-    const activity = await Activity.findByOrFail('slug', params.slug)
+    // almacena las imagenes que llegan por request
+    try {
 
-    const images = request.file('image', {
-      types: ['image'],
-      size: '3mb'
-    })
+      // Busca el perfil de usuario por slug
+      const activity = await Activity.findByOrFail('slug', params.slug)
 
+      // almacenamos las imagenes cargadas en la const fie
+      const files = request.file('image')
 
-    await images.moveAll(Helpers.tmpPath('uploads/activities/'), file => ({
-      name: `${Date.now()}-${file.clientName}`
-    }))
+      const img = []
 
-    if (!images.movedAll()) {
-      return images.errors()
+      for (let file of files._files) {
+        const cloudinaryMeta = await Cloudinary.v2.uploader.upload(
+          file.tmpPath,
+            {
+              // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada activities
+              // en caso de no existir la creara
+              folder: 'activities',
+              width: 500,
+            }
+        )
+        // almacenamos la informacion de la imagen en la tabla image_activities
+        img.push(await activity.images().create({
+          public_id: cloudinaryMeta.public_id,
+          version: cloudinaryMeta.version,
+          path: cloudinaryMeta.secure_url
+        }))
+      }
+
+      // await activity.load('images')
+      // devuelve los datos de la imagen de perfil almacenada
+      return response.status(200).json({
+        status: 'success',
+        activity:  img
+      })
     }
+    catch (error) {
+       // Si no logra cargarse muestra un error
+       if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar la actividad  ${params.slug}`
+       return response.status(400).json({
+         status: 'error',
+         message: error
+       })
+    }
+  }
+  async imageDestroy ({params, response }) {
 
-    await Promise.all(
-      images
-        .movedList()
-        .map(image => activity.images().create({ path: image.fileName }))
-    )
+    try {
+      // Busca el perfil de usuario por slug
+      const activity = await Activity.findByOrFail('slug', params.slug)
 
-    await activity.load('images')
+      // elimina la imagen por public_id en cloudinary
+      await Cloudinary.v2.uploader.destroy(params.public_id)
 
-    return response.status(200).json({
-      status: 'error',
-      data: activity
-    })
+      // elimina la imagen por public_id en la base de datos
+      await activity.images()
+        .where('public_id', params.public_id)
+        .delete()
+
+      const imgs = await activity.images().fetch()
+      // devuelve los datos de las imagenes de la actividad almacenadas
+      return response.status(200).json({
+        status: 'success',
+        data:  imgs
+      })
+    }
+    catch (error) {
+       // Si no logra eliminarse muestra un error
+       if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar la actividad  ${params.slug}`
+       return response.status(400).json({
+         status: 'error',
+         message: error
+       })
+    }
   }
 }
 
