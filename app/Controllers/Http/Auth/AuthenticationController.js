@@ -92,7 +92,7 @@ class AuthenticationController {
 
     const user = await User.find(id)
 
-    await user.load('profile')
+    await user.load('profile.image')
 
     return response.json({
       status: 'success',

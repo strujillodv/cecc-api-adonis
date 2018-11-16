@@ -46,7 +46,22 @@ class User extends Model {
   }
 
   /**
-   * Indica que cada usuario puede tener varias actividades creadas
+   * Indica que cada usuario puede crear varios tips
+   * Solo los administradores pueden acceder a este metodo
+   * Relacion 1 - n con la tabla tips
+   *
+   * @method tips
+   *
+   * @return {Object}
+   */
+
+  tips () {
+    return this.hasMany('App/Models/Api/V-1/Tip')
+  }
+
+  /**
+   * Indica que cada usuario puede crear varias actividades
+   * Solo los administradores pueden acceder a este metodo
    * Relacion 1 - n con la tabla activities
    *
    * @method activities
@@ -56,6 +71,34 @@ class User extends Model {
 
   activities () {
     return this.hasMany('App/Models/Api/V-1/Activity')
+  }
+
+  /**
+   * Indica que cada usuario puede hacer varias revisiones a los reportes
+   * Solo los administradores pueden acceder a este metodo
+   * Relacion 1 - n con la tabla hystory
+   *
+   * @method records
+   *
+   * @return {Object}
+   */
+
+  record () {
+    return this.hasMany('App/Models/Api/V-1/Record')
+  }
+
+  /**
+   * Indica que cada usuario puede crear varios reportes
+   * Cualquier usuario los puede crear
+   * Relacion 1 - n con la tabla reports
+   *
+   * @method reports
+   *
+   * @return {Object}
+   */
+
+  reports () {
+    return this.hasMany('App/Models/Api/V-1/Report')
   }
 
   /**

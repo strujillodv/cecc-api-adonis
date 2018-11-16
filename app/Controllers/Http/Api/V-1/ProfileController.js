@@ -1,12 +1,12 @@
 'use strict'
 
 /*
- * Modelos a implementar
+ * Modelos
  */
 const Profile = use('App/Models/Api/V-1/Profile')
 
 /*
- * Recursos utilizados
+ * Metodos
  */
 const { validate } = use('Validator')
 const Cloudinary = use('App/Services/CloudinaryService')
@@ -55,7 +55,7 @@ class ProfileController {
 
       await profile.load('user')
 
-      await profile.load('images')
+      await profile.load('image')
 
       // Enviamos los datos almacenados
       return response.status(201).json({
@@ -165,9 +165,9 @@ class ProfileController {
    *
    * POST profile/:slug/image
    */
-  async profileImageUpload ({params, request, response }) {
+  async imageUpload ({params, request, response }) {
 
-    // almacena las imagenes que llegan por request
+    // almacena la imagenen que llega por request
     try {
 
       // Busca el perfil de usuario por slug
@@ -185,8 +185,7 @@ class ProfileController {
           // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada profiles
           // en caso de no existir la creara
           folder: 'profiles',
-          width: 500,
-          async: true
+          width: 500
         }
       )
       // almacenamos la informacion de la imagen almacenada en la tabla image_profiles
@@ -212,18 +211,15 @@ class ProfileController {
   }
 
   /**
-   * Se encarga de actializar la imagen de perfil de usuario.
+   * Se encarga de actualizar la imagen de perfil de usuario.
    * El atributo en el formulario se debe llamar image
-   *
    * para cargar la imagen
    * PUT profile/:slug/image
    */
-  async profileImageUpdate ({params, request, response }) {
+  async imageUpdate ({params, request, response }) {
     try {
       // Busca el perfil de usuario por slug
       const profile = await Profile.findByOrFail('slug', params.slug)
-      // elimina la anterior imagen
-      await Cloudinary.v2.uploader.destroy(`profiles/${params.slug}`)
 
       // almacena la imagen que llegan por request en la const file
       const file = request.file('image')
@@ -233,16 +229,16 @@ class ProfileController {
         {
           public_id: profile.slug,
           folder: 'profiles',
-          width: 500,
-          async: true
+          width: 500
         }
       )
       // actualizamos la informacion de la imagen almacenada en la tabla image_profiles
-      const img = await profile.image().update({
+      let img = await profile.image().where('public_id', cloudinaryMeta.public_id).update({
         public_id: cloudinaryMeta.public_id,
         version: cloudinaryMeta.version,
         path: cloudinaryMeta.secure_url
       })
+      await profile.load('image')
       // muestra la nueva imagen de perfil almacenada
       return response.status(200).json({
         status: 'success',
