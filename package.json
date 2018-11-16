@@ -1,8 +1,8 @@
 {
   "name": "adonis-api-app",
-  "version": "1.6.84a",
+  "version": "1.8.119a",
   "adonis-version": "4.1.0",
-  "description": "Api-rest full de la aplicacoin cecc",
+  "description": "Api-rest full de la aplicación cecc",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
