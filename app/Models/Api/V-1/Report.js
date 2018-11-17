@@ -19,12 +19,12 @@ class Report extends Model {
    * Indica que cada actividad puede tener muchas revisiones
    * Relaciona 1 - n con la tabla history
    *
-   * @method record
+   * @method records
    *
    * @return {Object}
    */
-  record () {
-    return this.hasMany('App/Models/Api/V-1/History')
+  records () {
+    return this.hasMany('App/Models/Api/V-1/Record')
   }
 
   /**

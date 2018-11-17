@@ -83,7 +83,7 @@ class User extends Model {
    * @return {Object}
    */
 
-  record () {
+  records () {
     return this.hasMany('App/Models/Api/V-1/Record')
   }
 
