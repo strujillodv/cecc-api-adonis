@@ -16,11 +16,17 @@ class ActivityController {
    * Muestra todas las actividades.
    * GET activities
    */
-  async index () {
+  async index ({response}) {
 
-    const activity = Activity.all()
+    const activity = await Activity.query()
+          .with('images')
+          .with('user.profile')
+          .fetch()
 
-    return activity
+    return response.status(200).json({
+      status: 'success',
+      data: activity
+    })
   }
 
   /**
@@ -108,10 +114,8 @@ class ActivityController {
   async show ({ params, response }) {
     try {
       const activity = await Activity.findByOrFail('slug', params.slug)
-      await activity.load('user.profile')
-      await activity.load('organizers')
-      await activity.load('images')
-      return response.status(201).json({
+      await activity.loadMany(['user.profile', 'images','organizers.image'])
+      return response.status(200).json({
         status: 'success',
         data: activity
       })
@@ -132,32 +136,32 @@ class ActivityController {
   async update ({ auth, params, request, response }) {
     //Obtenemos el id del usuario autenticado y se almacena en una nueva const id
     const { id } = auth.user
+    // Busca la actividad por el slug
+    const activity = await Activity.findByOrFail('slug', params.slug)
+    // guarda los datos del request en una const data
+    const data = request.only
+    ([
+      'title',
+      'type',
+      'date_event',
+      'hour',
+      'short_description',
+      'description',
+      'latitude',
+      'longitude',
+      'address',
+      'neighborhood',
+      'location'
+    ])
     // comprueba si el usuario autenticado creo esta actividad
     if (id === data.user_id) {
       try {
-        // Busca la actividad por el slug
-        const activity = await Activity.findByOrFail('slug', params.slug)
-        // guarda los datos del request en una const data
-        const data = request.only
-        ([
-        'title',
-        'type',
-        'date_event',
-        'hour',
-        'short_description',
-        'description',
-        'latitude',
-        'longitude',
-        'address',
-        'neighborhood',
-        'location'
-        ])
         // método que solo modifica los atributos especificados.
         activity.merge(data)
         // metodo para persistir los cambios en la base de datos
         await activity.save()
         // respuesta exitosa con los datos de la actividad
-        return response.status(201).json({
+        return response.status(200).json({
           status: 'success',
           data: activity
         })
@@ -179,95 +183,153 @@ class ActivityController {
   }
 
   /**
-   * Elimina una actividad por id.
-   * DELETE activities/:id
+   * Elimina una actividad
+   * DELETE activities/:slug
    */
-  async destroy ({ params, request, response }) {
+  async destroy ({ auth, params, response }) {
+    //Obtenemos el id del usuario autenticado y se almacena en una nueva const id
+    const { id } = auth.user
+    // Busca por el slug de la actividad
+    const activity = await Activity.findByOrFail('slug', params.slug)
 
+    if (id === activity.user_id) {
+      try {
+
+        await activity.delete()
+
+        // respuesta exitosa
+        return response.status(200).json({
+          status: 'success',
+          data: 'Se ha eliminado el la actividad con exito'
+        })
+      } catch (error) {
+        // Si no logra actualizarse muestra un error
+        if (Object.keys(error).length === 0) error=`A ocurrido un error al eliminar la actividad`
+        return response.status(400).json({
+          status: 'error',
+          message: error
+        })
+      }
+    } else {
+      // Si no lo es muestra un error
+      return response.status(400).json({
+        status: 'error',
+        message: 'No tiene permiso para eliminar esta actividad'
+      })
+    }
   }
 
   /**
    * Se encarga de subir las imagenes de actividades.
-   * El atributo en el formulario se debe llamar images[]
+   * El atributo en el formulario se debe llamar image[]
    * para cargar la imagen
    *
    * POST activity/:slug/images
    */
-  async imageUpload ({params, request, response }) {
+  async imageUpload ({auth, params, request, response }) {
 
-    // almacena las imagenes que llegan por request
-    try {
+    //Obtenemos el rol del usuario autenticado y se almacena en una nueva const
+    const {rol } = auth.user
+    // validamos que e rol corresponda a administrador
+    if (rol === Env.get('ADMIN_TYPE')) {
 
-      // Busca el perfil de usuario por slug
-      const activity = await Activity.findByOrFail('slug', params.slug)
+      // almacena las imagenes que llegan por request
+      try {
 
-      // almacenamos las imagenes cargadas en la const fie
-      const files = request.file('image')
+        // Busca la actividad
+        const activity = await Activity.findByOrFail('slug', params.slug)
 
-      const img = []
+        // almacenamos las imagenes cargadas en la const fie
+        const files = request.file('image')
 
-      for (let file of files._files) {
-        const cloudinaryMeta = await Cloudinary.v2.uploader.upload(
-          file.tmpPath,
-            {
-              // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada activities
-              // en caso de no existir la creara
-              folder: 'activities',
-              width: 500,
-            }
-        )
-        // almacenamos la informacion de la imagen en la tabla image_activities
-        img.push(await activity.images().create({
-          public_id: cloudinaryMeta.public_id,
-          version: cloudinaryMeta.version,
-          path: cloudinaryMeta.secure_url
-        }))
+        const imgs = []
+
+        for (let file of files._files) {
+          const cloudinaryMeta = await Cloudinary.v2.uploader.upload(
+            file.tmpPath,
+              {
+                // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada activities
+                // en caso de no existir la creara
+                folder: 'activities',
+                width: 800,
+              }
+          )
+          // almacenamos la informacion de la imagen en la tabla image_activities
+          imgs.push(await activity.images().create({
+            cloudinary_id: cloudinaryMeta.public_id.split('/')[1],
+            public_id: cloudinaryMeta.public_id,
+            version: cloudinaryMeta.version,
+            path: cloudinaryMeta.secure_url
+          }))
+        }
+
+        // devuelve los datos de las imagenes guardadas
+        return response.status(200).json({
+          status: 'success',
+          data:  imgs
+        })
       }
-
-      // await activity.load('images')
-      // devuelve los datos de la imagen de perfil almacenada
-      return response.status(200).json({
-        status: 'success',
-        activity:  img
+      catch (error) {
+        // Si no logra guardarse muestra un error
+        if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar la actividad  ${params.slug}`
+        return response.status(400).json({
+          status: 'error',
+          message: error
+        })
+      }
+    } else {
+      // Si no lo es muestra un error
+      return response.status(400).json({
+        status: 'error',
+        message: 'No tiene permiso para subir imagenes'
       })
-    }
-    catch (error) {
-       // Si no logra cargarse muestra un error
-       if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar la actividad  ${params.slug}`
-       return response.status(400).json({
-         status: 'error',
-         message: error
-       })
     }
   }
-  async imageDestroy ({params, response }) {
 
-    try {
-      // Busca el perfil de usuario por slug
-      const activity = await Activity.findByOrFail('slug', params.slug)
+  /**
+   * Se encarga de eliminar las imagenes de actividades.
+   * para cargar la imagen
+   *
+   * DLETE activity/:slug/images/:cloudinary_id
+   */
+  async imageDestroy ({ auth, params, response }) {
+    //Obtenemos el id y el rol del usuario autenticado y se almacena en una nueva const
+    const {rol } = auth.user
+    // validamos que e rol corresponda a administrador
+    if (rol === Env.get('ADMIN_TYPE')) {
+      try {
+        // Busca la actividad
+        const activity = await Activity.findByOrFail('slug', params.slug)
 
-      // elimina la imagen por public_id en cloudinary
-      await Cloudinary.v2.uploader.destroy(params.public_id)
+        // elimina la imagen por cloudinary_id en cloudinary
+        await Cloudinary.v2.uploader.destroy('activities' + params.cloudinary_id)
 
-      // elimina la imagen por public_id en la base de datos
-      await activity.images()
-        .where('public_id', params.public_id)
-        .delete()
+        // elimina la imagen por cloudinary_id en la base de datos
+        await activity.images()
+          .where('cloudinary_id', params.cloudinary_id)
+          .delete()
 
-      const imgs = await activity.images().fetch()
-      // devuelve los datos de las imagenes de la actividad almacenadas
-      return response.status(200).json({
-        status: 'success',
-        data:  imgs
+        const imgs = await activity.images().fetch()
+        // devuelve los datos de las imagenes de la actividad almacenadas
+        return response.status(200).json({
+          status: 'success',
+          data:  imgs
+        })
+      }
+      catch (error) {
+        // Si no logra eliminarse muestra un error
+        if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar la actividad  ${params.slug}`
+        return response.status(400).json({
+          status: 'error',
+          message: error
+        })
+      }
+    } else {
+      // Si no lo es muestra un error
+      return response.status(400).json({
+        status: 'error',
+        message: 'No tiene permiso para subir imagenes'
       })
-    }
-    catch (error) {
-       // Si no logra eliminarse muestra un error
-       if (Object.keys(error).length === 0) error=`A ocurrido un error al buscar la actividad  ${params.slug}`
-       return response.status(400).json({
-         status: 'error',
-         message: error
-       })
     }
   }
 }
