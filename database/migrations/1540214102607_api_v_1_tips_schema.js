@@ -14,6 +14,7 @@ class TipsSchema extends Schema {
         .onUpdate('CASCADE')
         .onDelete('CASCADE')
       table.string('slug', 600).notNullable().unique()
+      table.string('type', 100).notNullable()
       table.string('title', 600).notNullable()
       table.string('description', 800).notNullable()
       table.timestamps()
