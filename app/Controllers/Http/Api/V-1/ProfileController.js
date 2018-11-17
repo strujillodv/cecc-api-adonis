@@ -190,6 +190,7 @@ class ProfileController {
       )
       // almacenamos la informacion de la imagen almacenada en la tabla image_profiles
       const img = await profile.image().create({
+        cloudinary_id: cloudinaryMeta.public_id.split('/')[1],
         public_id: cloudinaryMeta.public_id,
         version: cloudinaryMeta.version,
         path: cloudinaryMeta.secure_url

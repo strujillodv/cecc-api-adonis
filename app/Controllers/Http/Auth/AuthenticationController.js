@@ -5,6 +5,7 @@ const User = use('App/Models/User')
 
 // LLamamos al Metodo Validador de AdonisJs
 const { validate } = use('Validator')
+const Mail = use('Mail')
 
 // Clase para el manejo de la autenticación y creación de usuarios
 class AuthenticationController {
@@ -44,7 +45,15 @@ class AuthenticationController {
       const user = await User.create(data)
       // Genera un token para el nuevo usuario
       const token = await auth.generate(user)
-      // Responde a la aplicaion con msj 201 de ceración de usuario correcta y el token generado
+
+      // envia un mensaje de bienvenida
+      await Mail.send('email.welcome', data, (message) => {
+        message.from('<noreply@cecc.co>')
+        message.to(user.email)
+        message.subject(`Bienvenido ${user.user_name}`)
+      })
+
+      // Responde a la aplicaion con msj 201 de ceeación de usuario correcta y el token generado
       return response.status(201).json({
         status: 'success',
         data: token
@@ -57,6 +66,14 @@ class AuthenticationController {
         message: 'Ha ocurrido un error al intentar crear el usuario, ', error
       })
     }
+  }
+
+  /*
+   * Metodo para eliminar un usuario
+   */
+
+  async destroy ({ request, auth, response }) {
+
   }
 
   /*
@@ -93,6 +110,8 @@ class AuthenticationController {
     const user = await User.find(id)
 
     await user.load('profile.image')
+    // await user.load('reports')
+    await user.load('records')
 
     return response.json({
       status: 'success',
