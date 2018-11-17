@@ -4,6 +4,7 @@ const Activity = use('App/Models/Api/V-1/Activity')
 const Organizer = use('App/Models/Api/V-1/Organizer')
 
 const { validate} = use('Validator')
+const Cloudinary = use('App/Services/CloudinaryService')
 
 /**
  * Resourceful controller for interacting with organizers
@@ -79,18 +80,18 @@ class OrganizerController {
 
   /**
    * Update organizer details.
-   * PUT or PATCH activity/:slug_activity/organizers/:id_organizer
+   * PUT or PATCH activity/:slug/organizers/:id
    */
-  async update ({ params, request, response }) {
+  async update ({auth, params, request, response }) {
     //Obtenemos el id del usuario autenticado y se almacena en una nueva const id
     const { rol } = auth.user
 
     if (rol === Env.get('ADMIN_TYPE')) {
 
       // Busca la actividad por el slug
-      const activity = await Activity.findByOrFail('slug', params.slug_activity)
+      const activity = await Activity.findByOrFail('slug', params.slug)
       // Almacenamos la información en la Base de Datos
-      const organizer = await Organizer.find(params.id_organizer)
+      const organizer = await Organizer.find(params.id)
 
       // Obtenmos la información por request y la almacenamos en la const data
       const data = request.only
@@ -132,17 +133,17 @@ class OrganizerController {
 
   /**
    * Delete a organizer with id.
-   * DELETE activity/:slug_activity/organizers/:id_organizer
+   * DELETE activity/:slug/organizers/:id
    */
-  async destroy ({ params, response }) {
+  async destroy ({auth, params, response }) {
     //Obtenemos el id del usuario autenticado y se almacena en una nueva const id
     const { rol } = auth.user
     if (rol === Env.get('ADMIN_TYPE')) {
       try {
         // Busca la actividad por el slug
-        await Activity.findByOrFail('slug', params.slug_activity)
+        await Activity.findByOrFail('slug', params.slug)
         // Almacenamos la información en la Base de Datos
-        const organizer = await Organizer.find(params.id_organizer)
+        const organizer = await Organizer.find(params.id)
         organizer.delete()
 
         // Enviamos los datos almacenados
@@ -172,36 +173,35 @@ class OrganizerController {
    * El atributo en el formulario se debe llamar image
    * para cargar la imagen
    *
-   * POST activity/:slug_activity/organizers/:id_organizer/image
+   * POST activity/:slug/organizers/:id/image
    */
 
-  async imageUpload ({params, request, response }) {
+  async imageUpload ({auth, params, request, response }) {
 
     const { rol } = auth.user
     if (rol === Env.get('ADMIN_TYPE')) {
-      try {
-        // Busca la actividad por el slug
-        await Activity.findByOrFail('slug', params.slug_activity)
-        // Almacenamos la información en la Base de Datos
-        const organizer = await Organizer.find(params.id_organizer)
-        // almacenamos la imagen cargada en la const fie
 
+      try {
+        const organizer = await Organizer.find(params.id)
+
+        // almacenamos la imagen cargada en la const file
         const file = request.file('image')
 
         // cargamos la imagen de usuario con el servicio de cloudinary
         const cloudinaryMeta = await Cloudinary.v2.uploader.upload(
           file.tmpPath,
           {
-            // le asignamos como public_id el valor almacenado en el slug del perfil
+            // le asignamos como public_id el nombre del organizador
             public_id: organizer.name,
-            // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada profiles
+            // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada organizers
             // en caso de no existir la creara
             folder: 'organizers',
             width: 300
           }
         )
-        // almacenamos la informacion de la imagen almacenada en la tabla image_organizers
+        // almacenamos la informacion de la imagen almacenada en la tabla images_organizers
         const img = await organizer.image().create({
+          cloudinary_id: cloudinaryMeta.public_id.split('/')[1],
           public_id: cloudinaryMeta.public_id,
           version: cloudinaryMeta.version,
           path: cloudinaryMeta.secure_url
@@ -213,7 +213,7 @@ class OrganizerController {
         })
 
       } catch (error){
-        if (Object.keys(error).length === 0) error =`A ocurrido un error al eliminar el organizador`
+        if (Object.keys(error).length === 0) error =`A ocurrido un error al agregar la imagen`
         // Responde a la aplicaion si se produce un error al guardar la información
         return response.status(400).json({
           status: 'error',
@@ -232,34 +232,32 @@ class OrganizerController {
    * Se encarga de actualizar la imagen del organizador.
    * El atributo en el formulario se debe llamar image
    * para cargar la imagen
-   * PUT profile/:slug/image
+   * PUT activity/:slug/organizers/:id/image
    */
-  async imageUpdate ({params, request, response }) {
+  async imageUpdate ({auth, params, request, response }) {
 
     const { rol } = auth.user
     if (rol === Env.get('ADMIN_TYPE')) {
       try {
-        // Busca la actividad por el slug
-        await Activity.findByOrFail('slug', params.slug_activity)
-        // Almacenamos la información en la Base de Datos
-        const organizer = await Organizer.find(params.id_organizer)
-        // almacenamos la imagen cargada en la const fie
 
+        const organizer = await Organizer.find(params.id)
+
+        // almacenamos la imagen cargada en la const file
         const file = request.file('image')
 
         // cargamos la imagen de usuario con el servicio de cloudinary
         const cloudinaryMeta = await Cloudinary.v2.uploader.upload(
           file.tmpPath,
           {
-            // le asignamos como public_id el valor almacenado en el slug del perfil
+            // le asignamos como public_id el nombre del organizador
             public_id: organizer.name,
-            // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada profiles
+            // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada organizers
             // en caso de no existir la creara
             folder: 'organizers',
             width: 300
           }
         )
-        // almacenamos la informacion de la imagen almacenada en la tabla image_organizers
+        // almacenamos la informacion de la imagen almacenada en la tabla images_organizers
         const img = await organizer.image().where('public_id', cloudinaryMeta.public_id).update({
           public_id: cloudinaryMeta.public_id,
           version: cloudinaryMeta.version,
@@ -272,7 +270,7 @@ class OrganizerController {
         })
 
       } catch (error){
-        if (Object.keys(error).length === 0) error =`A ocurrido un error al eliminar el organizador`
+        if (Object.keys(error).length === 0) error =`A ocurrido un error al actualizar la imagen`
         // Responde a la aplicaion si se produce un error al guardar la información
         return response.status(400).json({
           status: 'error',
