@@ -10,6 +10,31 @@ const Mail = use('Mail')
 // Clase para el manejo de la autenticación y creación de usuarios
 class AuthenticationController {
 
+  async find ({ params, response, request }) {
+    const data = request.only(['value'])
+    try {
+      if (params.qwery === 'user_name' || params.qwery === 'email') {
+        const user = await User.findByOrFail(params.qwery, data.value)
+        return response.status(200).json({
+          status: 'sucess',
+          data: `El ${params.qwery} ${data.value} si esta registrado`
+        })
+      } else {
+        return response.status(400).json({
+          status: 'error',
+          data: `Se presento un error al realizar la consulta verifique el dato que intenta buscar`
+        })
+      }
+
+    } catch (e) {
+      return response.status(200).json({
+        status: 'error',
+        data: `El ${params.qwery} ${data.value} no esta registrado`
+      })
+    }
+
+  }
+
   /*
    * Metodo para registrar usuarios
    */
