@@ -185,7 +185,7 @@ class ProfileController {
           // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada profiles
           // en caso de no existir la creara
           folder: 'profiles',
-          width: 500
+          width: 720
         }
       )
       // almacenamos la informacion de la imagen almacenada en la tabla image_profiles
@@ -230,7 +230,7 @@ class ProfileController {
         {
           public_id: profile.slug,
           folder: 'profiles',
-          width: 500
+          width: 720
         }
       )
       // actualizamos la informacion de la imagen almacenada en la tabla image_profiles

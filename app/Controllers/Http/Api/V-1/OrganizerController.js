@@ -196,7 +196,7 @@ class OrganizerController {
             // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada organizers
             // en caso de no existir la creara
             folder: 'organizers',
-            width: 300
+            width: 320
           }
         )
         // almacenamos la informacion de la imagen almacenada en la tabla images_organizers
@@ -254,7 +254,7 @@ class OrganizerController {
             // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada organizers
             // en caso de no existir la creara
             folder: 'organizers',
-            width: 300
+            width: 320
           }
         )
         // almacenamos la informacion de la imagen almacenada en la tabla images_organizers

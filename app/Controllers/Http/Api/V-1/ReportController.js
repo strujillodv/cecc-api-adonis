@@ -240,7 +240,7 @@ class ReportController {
               // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada reports
               // en caso de no existir la creara
               folder: 'reports',
-              width: 800,
+              width: 1200,
             }
         )
         // almacenamos la informacion de la imagen en la tabla image_reports

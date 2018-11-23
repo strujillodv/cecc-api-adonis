@@ -236,7 +236,7 @@ class TipController {
                 // Le indicamos a cloudinary que almacene la imagen en una carpeta llamada tips
                 // en caso de no existir la creara
                 folder: 'tips',
-                width: 900,
+                width: 1200,
               }
           )
           // almacenamos la informacion de la imagen en la tabla image_tips
