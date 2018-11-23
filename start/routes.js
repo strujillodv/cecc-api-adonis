@@ -128,7 +128,9 @@ Route.group(() => {
 
   // ruta para la consulta de los tips
   Route.get('tips', 'Api/V-1/TipController.index')
-  // ruta para la consulta de una actividad
+  // ruta para la consulta de un tip aleatorio
+  Route.get('findTip', 'Api/V-1/TipController.find')
+  // ruta para la consulta de un tip especifico
   Route.get('tips/:slug', 'Api/V-1/TipController.show')
   // ruta para la creacion de nuevos tips
   Route.post('tips', 'Api/V-1/TipController.store').middleware('auth')

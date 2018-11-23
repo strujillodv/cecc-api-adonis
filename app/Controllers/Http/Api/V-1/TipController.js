@@ -15,20 +15,48 @@ const Cloudinary = use('App/Services/CloudinaryService')
  */
 class TipController {
   /**
-   * Muestra uno de los tips aleatoreamente.
+   * Muestra todos los tips.
    * GET tip
    */
   async index ({ response }) {
 
-    const tip = await Tip.query()
+    const tips = await Tip.query()
           .with('images')
           .with('user.profile')
           .fetch()
 
     return response.status(200).json({
       status: 'success',
-      data: tip
+      data: tips
     })
+  }
+
+  /**
+   * Busca un tipi de forma aleatoria.
+   * GET tip
+   */
+  async find ({ response }) {
+    try {
+      let tip= ''
+      const tips = await Tip.getCount()
+      if ( tips >= 2 ) {
+        const random = Math.floor((Math.random() * tips) + 1)
+        tip = await Tip.find(random)
+      } else {
+        tip = await Tip.find(tips)
+      }
+      return response.status(200).json({
+        status: 'success',
+        data: tip
+      })
+    } catch (error) {
+      if (Object.keys(error).length === 0) error =`A ocurrido un error al buscar el tip`
+      // Responde a la aplicaion si se produce un error al guardar la información
+      return response.status(400).json({
+        status: 'error',
+        message: error
+      })
+    }
   }
 
   /**
