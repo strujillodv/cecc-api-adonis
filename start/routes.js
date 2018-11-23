@@ -28,6 +28,8 @@ Route.group(() => {
   Route.post('register', 'Auth/AuthenticationController.register')
   // ruta para mostrar la información del usuario autenticado
   Route.get('show', 'Auth/AuthenticationController.show').middleware(['auth'])
+  // ruta para buscar si un usuario / email se encuentra registrado
+  Route.post('search/:qwery', 'Auth/AuthenticationController.find')
 
   /*
    * Rutas para la gestion de perfil de usuarios
